@@ -14,7 +14,7 @@ public class CountDownManager {
     private static final String TAG = CountDownManager.class.getName();
     private final static int ONE_SEC = 1000;
 
-    private static CountDownManager manager = new CountDownManager();
+    private volatile static CountDownManager manager;
 
     private ArrayList<TimeEntity> timeTasks;
 
@@ -25,6 +25,13 @@ public class CountDownManager {
     }
 
     public static CountDownManager getInstance() {
+        if (manager == null) {
+            synchronized (CountDownManager.class) {
+                if (manager == null) {
+                    manager = new CountDownManager();
+                }
+            }
+        }
         return manager;
     }
 
@@ -73,7 +80,6 @@ public class CountDownManager {
             TimerTask task = new TimerTask() {
                 @Override
                 public void run() {
-                    Log.e(TAG, "======run===========");
                     removeTask();
                 }
             };
@@ -89,7 +95,6 @@ public class CountDownManager {
                 int currentTime = next.getCurrentTime();
                 int time = next.getTime();
                 TimeCallback callback = next.getCallback();
-                Log.e(TAG, "=====next=====" + currentTime + "====" + time + "====" + callback);
 
                 if (time > currentTime) {
                     currentTime++;
@@ -99,10 +104,8 @@ public class CountDownManager {
                     callBackOnTime(callback, currentTime);
                     callBackTimeUp(callback);
 
-                    Log.e(TAG, "=========remove=====timeUp====");
                     iterator.remove();
                 } else {
-                    Log.e(TAG, "=========remove=======");
                     iterator.remove();
                 }
             }
@@ -149,7 +152,6 @@ public class CountDownManager {
 
     // 根据tag删除对应的任务
     public void cancelTime(String tag) {
-        Log.e(TAG, "======cancelTime======" + tag);
         if (timeTasks == null || TextUtils.isEmpty(tag)) {
             return;
         }
